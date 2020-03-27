@@ -9,7 +9,6 @@ cf.read(os.getcwd()+"/app.conf")
 userName = cf.get("db","user")
 userPass = cf.get("db","pass")
 host = cf.get("ssh","host")
- 
 app = wx.App()  
 showLogin()
-app.MainLoop() 
+app.MainLoop()
