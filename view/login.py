@@ -40,7 +40,7 @@ class Mywin(wx.Frame):
       self.Centre()  
       self.Show()  
    
-   def cancelEvent(self,event): 
+   def cancelEvent(self,event):
          self.nm1.Clear()
          self.nm2.Clear(); 
 
