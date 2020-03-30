@@ -76,7 +76,7 @@ class MyFrame(wx.Frame):
  
         # Then we call CreateGrid to set the dimensions of the grid
         # (100 rows and 10 columns in this example)
-        grid.CreateGrid(100, 10)
+        grid.CreateGrid(200, 10)
  
         # We can set the sizes of individual rows and columns
         # in pixels
@@ -84,8 +84,8 @@ class MyFrame(wx.Frame):
         grid.SetColSize(0, 120)
  
         # And set grid cell contents as strings
-        grid.SetCellValue(0, 0, 'wxGrid is good')
- 
+        grid.SetCellValue(0, 0, 'wxGrid is good') 
+
         # We can specify that some cells are read.only
         grid.SetCellValue(0, 3, 'This is read.only')
         grid.SetReadOnly(0, 3)
@@ -101,20 +101,39 @@ class MyFrame(wx.Frame):
         # and precision of 2
         grid.SetColFormatFloat(5, 6, 2)
         grid.SetCellValue(0, 6, '3.1415')
-        vbox2.Add(grid, 2, flag=wx.EXPAND | wx.ALL, border=5)
 
-        # self.st = wx.StaticText(right,1, label='右侧面板') 
-        # vbox2.Add(self.st, 2, flag=wx.EXPAND | wx.ALL, border=5)
+        # 标题
+        lbl = wx.StaticText(right,-1,style = wx.ALIGN_CENTER) 
+        font = wx.Font(18, wx.ROMAN, wx.ITALIC, wx.NORMAL) 
+        lbl.SetFont(font) 
+        lbl.SetLabel('统计信息') 
+        vbox2.Add(lbl, 3, wx.EXPAND)
 
-        # #创建静态文本
-        # statictext=wx.StaticText(right,label='选择团队')
-        # list1=['Python','Java',"C++"]
-        # ch1=wx.ComboBox(right,-1,value='C',choices=list1,style=wx.CB_SORT)
-        # #添加事件处理
-        # # self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch1) 
-        # vbox2.Add(statictext,1,flag=wx.LEFT |wx.RIGHT|wx.FIXED_MINSIZE,border=5)
-        # vbox2.Add(ch1,1,flag=wx.LEFT |wx.RIGHT|wx.FIXED_MINSIZE,border=5)  
+        # 操作
+        h_box_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        v_box_sizer = wx.BoxSizer(wx.VERTICAL)
+		# # self.file_path = wx.TextCtrl(right, wx.ID_ANY,pos=(0,30), size =(200, 20), style = wx.TE_CENTER)
+		# self.open_button = wx.Button(right, -1, label='打开')
+		# self.save_button = wx.Button(right, -1, label= '保存')
+ 
+		# # h_box_sizer.Add(self.file_path, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+		# h_box_sizer.Add(self.open_button, proportion=0, flag= wx.ALL, border=5)
+		# h_box_sizer.Add(self.save_button, proportion=0, flag= wx.ALL, border=5)
+		# self.edit_text = wx.TextCtrl(right, style=wx.TE_MULTILINE|wx.TE_RICH2|wx.HSCROLL) 
+		# v_box_sizer.Add(h_box_sizer, proportion=0, flag=wx.EXPAND)
+		# v_box_sizer.Add(self.edit_text, proportion=1, flag=wx.EXPAND, border=5) 
+        v_box_sizer.Add(h_box_sizer, proportion=0, flag=wx.EXPAND)
+        vbox2.Add(v_box_sizer, -1, wx.EXPAND) 
 
+        # 统计信息
+        lbl1 = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE) 
+        lbl1.SetLabel('张三\r\n李四\r\n王五\r\n') 
+        lbl1.SetForegroundColour((255,0,0)) 
+        lbl1.SetBackgroundColour((0,0,0))   
+ 
+        vbox2.Add(lbl1, -1, wx.EXPAND) 
+        vbox2.Add(grid, -1, flag=wx.EXPAND, border=5) 
+        
         self.SetIcon(icon)
  
     def on_click(self, event):
