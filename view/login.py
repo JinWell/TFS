@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 import requests
 from requests.auth import HTTPBasicAuth  
 import urllib 
-
+from view.main import *
+from host.tfsService import *
+ 
 class Mywin(wx.Frame): 
-   def __init__(self, parent, title): 
+   def __init__(self, parent, title,name,pas): 
       super(Mywin, self).__init__(parent, title = title)   
       icon = wx.Icon('Source/fav.ico', wx.BITMAP_TYPE_ICO) 
       panel = wx.Panel(self) 
@@ -37,8 +39,9 @@ class Mywin(wx.Frame):
       self.SetIcon(icon) 
       self.Bind(wx.EVT_BUTTON,self.cancelEvent,cancelButton)
       self.Bind(wx.EVT_BUTTON,self.submitEvent,okButton)
-      self.Centre()  
-      self.Show()  
+      self.nm1.SetValue(name)
+      self.nm2.SetValue(pas)
+      self.Centre()
    
    def cancelEvent(self,event):
          self.nm1.Clear()
@@ -46,10 +49,30 @@ class Mywin(wx.Frame):
 
    def submitEvent(self, event):
          user = self.nm1.GetValue()
-         userPass = self.nm2.GetValue();  
-         res = http_Get("http://192.168.0.91:91/tfs/DefaultCollection/RMIS/_queries",{})
-         soup = BeautifulSoup(res)
-         print(soup.select("a[tag='ds']"))
+         userPass = self.nm2.GetValue()
+         result = login(user,userPass)
+         if tryLogin(user,userPass):
+            self.Hide()
+            showMain()  
+      #    soup = BeautifulSoup(res)
+      #    print(soup.select("a[tag='ds']"))
 
-def showLogin():
-    Mywin(None,  '登录TFS账号')
+def tryLogin(user,userPass):
+      result = login(user,userPass)
+      if  result.ok:
+            return True
+      else:
+            wx.MessageBox("登陆失败，请核对密码是否正确", "登陆失败",wx.OK | wx.ICON_INFORMATION) 
+            return False
+
+def showLogin(name,pas,becomeSilent): 
+      win = Mywin(None,  '登录TFS账号',name,pas) 
+      if  becomeSilent:
+            if tryLogin(name,pas):
+                  showMain()
+            else:
+                  win.Show()
+      else:
+            win.Show()
+
+      

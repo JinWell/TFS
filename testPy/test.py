@@ -113,5 +113,3 @@ wiq = team_search_Dict[sid]
 payload = {'wiql':wiq.Origin["wiql"]}
 search_result = session.post(get_url('tfs/DefaultCollection/{0}/_api/_wit/query?__v=5').format(project_Id),json = payload)
 search_details = search_result.json()
-
- 
