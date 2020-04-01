@@ -111,23 +111,71 @@ class MyFrame(wx.Frame):
 
         # 操作
         h_box_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
         v_box_sizer = wx.BoxSizer(wx.VERTICAL)
-		# # self.file_path = wx.TextCtrl(right, wx.ID_ANY,pos=(0,30), size =(200, 20), style = wx.TE_CENTER)
-		# self.open_button = wx.Button(right, -1, label='打开')
-		# self.save_button = wx.Button(right, -1, label= '保存')
+
+        gs = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE,label='工时：') 
+        # gsNum = wx.TextCtrl(right, -1, style = wx.ALIGN_LEFT) 
+        sc = wx.SpinCtrl(right, -1, "", (30, 20), (80, -1))  
+        sc.SetRange(1,100)  
+        sc.SetValue(40)  
+
+        btn = wx.Button(right,-1,"统计",style = wx.ALIGN_LEFT,size=(60,27))
+        btn1 = wx.Button(right,-1,"导出Excel",style = wx.ALIGN_LEFT,size=(100,27))
+
+        # xztd = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE,label='选择团队:') 
+        xztd = wx.StaticText(right, wx.ID_ANY, "选择团队:", (10,10), (100,27),wx.ALIGN_CENTER)
+        xztd.SetForegroundColour("White")
+        xztd.SetBackgroundColour("Black")
+        # font1=wx.Font(-10,wx.SCRIPT,wx.NORMAL,wx.NORMAL,False,)
+        # xztd.SetFont(font)
+
+        # 获取团队
+        teams = getTeam()
+        teamsDic = {} 
+        
+        for i,item in enumerate(teams):
+            teamsDic[item['name']] = item['id']
+
+        list_values = [i for i in teamsDic.values()]
+        list_keys= [ i for i in teamsDic.keys()]
  
-		# # h_box_sizer.Add(self.file_path, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-		# h_box_sizer.Add(self.open_button, proportion=0, flag= wx.ALL, border=5)
-		# h_box_sizer.Add(self.save_button, proportion=0, flag= wx.ALL, border=5)
-		# self.edit_text = wx.TextCtrl(right, style=wx.TE_MULTILINE|wx.TE_RICH2|wx.HSCROLL) 
-		# v_box_sizer.Add(h_box_sizer, proportion=0, flag=wx.EXPAND)
-		# v_box_sizer.Add(self.edit_text, proportion=1, flag=wx.EXPAND, border=5) 
+        ch1=wx.ComboBox(right,-1,value='RMIS',choices=list_keys,style=wx.CB_SORT)
+        #添加事件处理
+        self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch1)
+
+        #获取团队成员
+        # project = list_firstOrDefault(lambda x :x["name"]=='RMIS',teams)
+        # users = getTeamUser(project["id"])
+
+        cygl = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE,label='成员过滤:')
+        list2=["陈金伟","韩小江","姜智林","杨博","邓东林"]
+        ch2=wx.ComboBox(right,-1,value='姜智林',choices=list2,style=wx.CB_SORT)
+        #添加事件处理
+        self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch2)
+
+        h_box_sizer.Add(xztd)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(ch1)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(cygl)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(ch2)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(gs)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(sc)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(btn)
+        h_box_sizer.Add((10,-1))
+        h_box_sizer.Add(btn1)  
         v_box_sizer.Add(h_box_sizer, proportion=0, flag=wx.EXPAND)
         vbox2.Add(v_box_sizer, -1, wx.EXPAND) 
+        vbox2.Add((-1,15))
 
         # 统计信息
         lbl1 = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE) 
-        lbl1.SetLabel('张三\r\n李四\r\n王五\r\n') 
+        lbl1.SetLabel('张三') 
         lbl1.SetForegroundColour((255,0,0)) 
         lbl1.SetBackgroundColour((0,0,0))   
  
@@ -136,6 +184,9 @@ class MyFrame(wx.Frame):
         
         self.SetIcon(icon)
  
+    def on_combobox(self,event):
+        print("选择{0}".format(event.GetString()))
+    
     def on_click(self, event):
         item = event.GetItem()
         self.st.SetLabel(self.tree.GetItemText(item))
@@ -191,8 +242,6 @@ class App(wx.App):
 
 
 def showMain():
-    teams = getTeam() 
-    # 渲染项目团队 
     app = App()
     app.MainLoop()
      

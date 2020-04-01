@@ -27,6 +27,7 @@ baseHeaders = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
     'Content-Type': 'application/json',
     'Origin':base_url,
+    'Accept':'application/json;api-version=4.1-preview.1;excludeUrls=true',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
 }
@@ -34,6 +35,16 @@ baseHeaders = {
 session= requests.session()
 session.headers.update(baseHeaders)  
 
+def list_firstOrDefault(lam,data):
+    d1 = filter(lam,data)
+    d2 = list(d1)
+    r = []
+    if len(d2):
+        r = d2[0]
+    else:
+        r = None
+    return r
+    
 
 def login(name,pas):
         session.auth = HttpNtlmAuth('WIN-8B73S7IKJR2\\'+name,pas)
@@ -41,6 +52,56 @@ def login(name,pas):
         return login
 
 def  getTeam():
-    projects = session.get(get_url('tfs/DefaultCollection/_apis/projects?stateFilter=WellFormed&%24top=500&%24skip=0'))
-    projects_json = projects.json()['value']
-    return projects_json
+        projects = session.get(get_url('tfs/DefaultCollection/_apis/projects?stateFilter=WellFormed&%24top=500&%24skip=0'))
+        projects_json = projects.json()['value']
+        return projects_json
+
+def getTeamUser(projectId):  
+    payload = {
+        "contributionIds": ["ms.vss-tfs-web.project-members-data-provider"],
+        "context": {
+            "properties": {
+                "pageSource": {
+                    "contributionPaths": ["VSS", "VSS/Resources", "q", "knockout", "mousetrap", "mustache", "react", "react-dom", "react-transition-group", "jQueryUI", "jquery", "OfficeFabric", "@uifabric", "VSSUI", "WidgetComponents", "WidgetComponents/Resources", "Charts", "Charts/Resources", "ContentRendering", "ContentRendering/Resources", "TFS", "Notifications", "Presentation/Scripts/marked", "Presentation/Scripts/URI", "Presentation/Scripts/punycode", "Presentation/Scripts/IPv6", "Presentation/Scripts/SecondLevelDomains", "highcharts", "highcharts-more", "highcharts-heatmap", "highcharts-funnel", "highcharts-accessibility"],
+                    "diagnostics": {
+                        "sessionId": "b14c7085-8ff1-43ca-b4bc-885cb72c13ad",
+                        "activityId": "b14c7085-8ff1-43ca-b4bc-885cb72c13ad",
+                        "bundlingEnabled":"true",
+                        "webPlatformVersion": "M131"
+                    },
+                    "navigation": {
+                        "topMostLevel": "8",
+                        "area": "",
+                        "currentController": "Apps",
+                        "currentAction": "ContributedHub",
+                        "commandName": "Project.Overview",
+                        "routeId": "ms.vss-tfs-web.project-overview-route",
+                        "routeTemplates": ["{project}"],
+                        "routeValues": {
+                            "project": "RMIS",
+                            "controller": "Apps",
+                            "action": "ContributedHub"
+                        }
+                    },
+                    "project": {
+                        "id": "af272b7e-6207-4c03-a678-536a9c43cc91",
+                        "name": "RMIS"
+                    },
+                    "selectedHubGroupId": "ms.vss-tfs-web.project-team-hidden-hub-group",
+                    "selectedHubId": "ms.vss-tfs-web.project-overview-hub",
+                    "team": {
+                        "id": "23435373-4268-496c-a8f6-2c34d5181789",
+                        "name": "RMIS 团队"
+                    },
+                    "url": "http://192.168.0.91:91/tfs/DefaultCollection/RMIS"
+                }
+            }
+        }
+    }
+    
+    url = get_url('tfs/DefaultCollection/_apis/Contribution/dataProviders/query/project/')
+    users = session.post(url,json = payload)
+    users_json = users.json()
+    members = users_json['data']['ms.vss-tfs-web.project-members-data-provider']['members']
+    _members = json.loads(members)
+    return users_json
