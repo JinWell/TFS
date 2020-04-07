@@ -108,6 +108,7 @@ referer = get_url('tfs/DefaultCollection/RMIS/_queries?id={0}&_a=query').format(
 headers = {
     "Referer":referer
 }
+
 session.headers.update(headers)
 wiq = team_search_Dict[sid]
 payload = {'wiql':wiq.Origin["wiql"]}

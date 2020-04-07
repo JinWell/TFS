@@ -14,6 +14,10 @@ team_search_Tree = Node('-1','Root',None)
 team_search_Dict = {}
 host = ''
 session = {}
+team_search_Tree = Node('-1','TFS查询',None)
+team_search_Dict = {}
+table_data = []
+table_cell = []
 
 base_url = 'http://192.168.0.91:91/'
 
@@ -55,6 +59,35 @@ def  getTeam():
         projects = session.get(get_url('tfs/DefaultCollection/_apis/projects?stateFilter=WellFormed&%24top=500&%24skip=0'))
         projects_json = projects.json()['value']
         return projects_json
+
+def getTfsSearchItem(project_Id):
+    target_project_data = session.get(get_url('tfs/DefaultCollection/{0}/_apis/wit/queries?api-version=1.0&%24depth=1&%24expand=minimal').format(project_Id))
+    project_rmis_json = target_project_data.json()['value']
+    for i,item in enumerate(project_rmis_json):
+        node = Node(item['id'],item['name'],item)
+        team_search_Tree.Childs.append(node)
+        team_search_Dict[node.NodeId] = node
+        if 'hasChildren' in item and  item['hasChildren']: 
+            loadChildNode(node,project_Id) 
+
+def loadChildNode(parent,project_Id):
+    parentId = parent.Origin['id']
+    # 获取下面的子节点
+    res = session.get(get_url('tfs/DefaultCollection/{0}/_apis/wit/queries/{1}?api-version=1.0&%24depth=2&%24expand=minimal').format(project_Id,parentId))
+    res_json = res.json();
+    res_childs = res_json['children']
+    for i,item in enumerate(res_childs):
+        node = Node(item['id'],item['name'],item)
+
+        team_search_Dict[node.NodeId] = node 
+        parent.Childs.append(node)
+
+        if 'hasChildren' in item:
+            loadChildNode(node,project_Id)
+        # else:
+        #     team_search_Dict[node.NodeId] = node 
+        #     parent.Childs.append(node)
+
 
 def getTeamUser(projectId):  
     payload = {

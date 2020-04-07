@@ -43,9 +43,23 @@ class GridFrame(wx.Frame):
 # 自定义窗口类MyFrame
 class MyFrame(wx.Frame):
     def __init__(self):
-        super().__init__(parent=None, title="Tree", size=(1500, 600))
+        super().__init__(parent=None, title="TFS查询 - V1.0.0", size=(1500, 600))
         self.Center()
         icon = wx.Icon('Source/fav.ico', wx.BITMAP_TYPE_ICO) 
+
+        # 获取团队
+        teams = getTeam()
+        teamsDic = {} 
+        
+        for i,item in enumerate(teams):
+            teamsDic[item['name']] = item['id']
+
+        list_values = [i for i in teamsDic.values()]
+        list_keys= [ i for i in teamsDic.keys()]
+  
+        #获取团队成员
+        project = list_firstOrDefault(lambda x :x["name"]=='RMIS',teams)
+        # users = getTeamUser(project["id"])
 
         swindow = wx.SplitterWindow(parent=self, id=-1)
         left = wx.Panel(parent=swindow)
@@ -58,7 +72,7 @@ class MyFrame(wx.Frame):
         swindow.SetMinimumPaneSize(80)
 
         # 创建一棵树 
-        self.tree = self.CreateTreeCtrl(left)
+        self.tree = self.CreateTreeCtrl(left,project['id'])
         self.Bind(wx.EVT_TREE_SEL_CHANGING, self.on_click, self.tree)
 
         # 为left面板设置一个布局管理器
@@ -130,23 +144,9 @@ class MyFrame(wx.Frame):
         # font1=wx.Font(-10,wx.SCRIPT,wx.NORMAL,wx.NORMAL,False,)
         # xztd.SetFont(font)
 
-        # 获取团队
-        teams = getTeam()
-        teamsDic = {} 
-        
-        for i,item in enumerate(teams):
-            teamsDic[item['name']] = item['id']
-
-        list_values = [i for i in teamsDic.values()]
-        list_keys= [ i for i in teamsDic.keys()]
- 
         ch1=wx.ComboBox(right,-1,value='RMIS',choices=list_keys,style=wx.CB_SORT)
         #添加事件处理
         self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch1)
-
-        #获取团队成员
-        # project = list_firstOrDefault(lambda x :x["name"]=='RMIS',teams)
-        # users = getTeamUser(project["id"])
 
         cygl = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE,label='成员过滤:')
         list2=["陈金伟","韩小江","姜智林","杨博","邓东林"]
@@ -191,8 +191,12 @@ class MyFrame(wx.Frame):
         item = event.GetItem()
         self.st.SetLabel(self.tree.GetItemText(item))
  
-    def CreateTreeCtrl(self, parent):
+    def CreateTreeCtrl(self, parent,project_Id):
         tree = wx.TreeCtrl(parent)
+
+        # 获取查询列表
+        getTfsSearchItem(project_Id);
+
         # 通过wx.ImageList()创建一个图像列表imglist并保存在树中
         imglist = wx.ImageList(16, 16, True, 2)
         imglist.Add(wx.ArtProvider.GetBitmap(wx.ART_FOLDER, size=wx.Size(16, 16)))
@@ -200,35 +204,30 @@ class MyFrame(wx.Frame):
         tree.AssignImageList(imglist)
 
         # 创建根节点和5个子节点并展开
-        root = tree.AddRoot('TreeRoot', image=0)
-        item1 = tree.AppendItem(root, 'Item1', 0)
-        item2 = tree.AppendItem(root, 'Item2', 0)
-        item3 = tree.AppendItem(root, 'Item3', 0)
-        item4 = tree.AppendItem(root, 'Item4', 0)
-        item5 = tree.AppendItem(root, 'Item5', 0)
-        tree.Expand(root)
-        tree.SelectItem(root)
+        root = tree.AddRoot('RMIS团队查询', image=0)
  
-        # 给item1节点添加5个子节点并展开
-        tree.AppendItem(item1, 'file 1', 1)
-        tree.AppendItem(item1, 'file 2', 1)
-        tree.AppendItem(item1, 'file 3', 1)
-        tree.AppendItem(item1, 'file 4', 1)
-        tree.AppendItem(item1, 'file 5', 1)
-        tree.Expand(item1)
- 
-        # 给item2节点添加5个子节点并展开
-        tree.AppendItem(item2, 'file 1', 1)
-        tree.AppendItem(item2, 'file 2', 1)
-        tree.AppendItem(item2, 'file 3', 1)
-        tree.AppendItem(item2, 'file 4', 1)
-        tree.AppendItem(item2, 'file 5', 1)
-        tree.Expand(item2)
- 
+        for i,item in enumerate(team_search_Tree.Childs):
+            treeNode = tree.AppendItem(root,item.NodeName, 0)
+            if  len(item.Origin['children']) >0:
+                loadChild(tree,treeNode,item) 
+                tree.Expand(treeNode) 
+
+        tree.Expand(root) 
+        # tree.SelectItem(root)
+   
         # 返回树对象
         return tree
  
- 
+
+def loadChild(tree,treeNode,parentItem):
+     for i,item in enumerate(parentItem.Childs):
+            if  len(item.Childs) > 0:
+                node = tree.AppendItem(treeNode, item.NodeName, 0)
+                loadChild(tree,node,item)
+                # tree.Expand(node)
+            else:
+                node = tree.AppendItem(treeNode, item.NodeName, 1)
+
 class App(wx.App):
     def OnInit(self):
         # 创建窗口对象

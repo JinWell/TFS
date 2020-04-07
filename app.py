@@ -11,7 +11,6 @@ userName = cf.get("db","user")
 userPass = cf.get("db","pass")
 host = cf.get("ssh","host")
 becomeSilent = cf.get("config","becomeSilent")
-
 app = wx.App()  
 showLogin(userName,userPass,becomeSilent)
-app.MainLoop()
+app.MainLoop()       

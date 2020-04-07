@@ -3,7 +3,7 @@ import wx, wx.grid
 class GridData(wx.grid.PyGridTableBase):
     _cols = "a b c".split()
     _data = [
-        "1 2 3".split(),
+        [1,2,"dgd"],
         "4 5 6".split(),
         "7 8 9".split()
     ]
