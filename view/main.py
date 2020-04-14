@@ -1,6 +1,17 @@
 import wx
 from host.tfsService import *
 import wx.grid
+import time
+import datetime
+
+global project
+project = {}
+
+global _init
+_init = True
+
+global grid
+grid = {}
 
 class GridFrame(wx.Frame):
     def __init__(self, parent):
@@ -39,6 +50,99 @@ class GridFrame(wx.Frame):
  
         self.Show()
 
+def  Empty():
+    return "                         |"
+
+def is_valid_date(str_date):
+    if str_date == None:
+        return ''
+
+    str_date = str_date.replace('/Date(','').replace(')/','') 
+    str_date1 =  str_date[0:10]+'.'+ str_date[-3:] 
+    timeArray = time.localtime(float(str_date1))
+    otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+
+    return otherStyleTime
+    # '''判断是否是一个有效的日期字符串'''
+    # try:
+    #     time.strptime(str_date, "%Y-%m-%d")
+    # except Exception:
+    #     # traceback.print_exc()
+    #     raise Exception("时间参数错误 near : {}".format(str_date)) 
+
+class GridData(wx.grid.PyGridTableBase):
+    _cols = []
+    _data = []
+
+    def __init__(self,task):
+        super(GridData,self).__init__()
+        dts = task['payload']
+        oldColumns = task['columns']
+        showColumns = []
+        rows = dts['rows']
+
+        for k,v in  enumerate(dts['columns']): 
+            item = list_firstOrDefault(lambda x :v==x['name'],oldColumns)
+            if (item is None) == False:
+                showColumns.append(item['text'])
+            else:
+                showColumns.append('● [ 未知 ]')
+
+        global grid
+
+        grid.ClearGrid()
+
+        for j,p in enumerate(showColumns):
+            grid.SetColLabelValue(j, p)
+
+        # 表格数据
+        for k,v in enumerate(rows):
+            # 表格列
+            for j,p in enumerate(showColumns):
+                text = str(v[j]) 
+                if p == '创建者' or p == '指派给': 
+                    text = text.split('<')[0]
+
+                elif p == '完成日期' or p == '开始日期' or p == '截止日期': 
+                    text = is_valid_date(v[j])
+                
+                elif p == '初始估计' or p == '已完成工作':
+                    if text == 'None':
+                       text = ' '
+                else:
+                    if text == 'None':
+                       text = ' '
+                       
+                grid.SetCellValue(k, j,text)
+
+        self._cols = showColumns
+        self._data = rows
+ 
+    _highlighted = set()
+
+    def GetColLabelValue(self, col):
+        return self._cols[col]
+
+    def GetNumberRows(self):
+        return len(self._data)
+
+    def GetNumberCols(self):
+        return len(self._cols)
+
+    def GetValue(self, row, col):
+        return self._data[row][col]
+
+    def SetValue(self, row, col, val):
+        self._data[row][col] = val
+
+    def GetAttr(self, row, col, kind):
+        attr = wx.grid.GridCellAttr()
+        attr.SetBackgroundColour(wx.GREEN if row in self._highlighted else wx.WHITE)
+        return attr
+
+    def set_value(self, row, col, val):
+        self._highlighted.add(row)
+        self.SetValue(row, col, val)
 
 # 自定义窗口类MyFrame
 class MyFrame(wx.Frame):
@@ -58,6 +162,7 @@ class MyFrame(wx.Frame):
         list_keys= [ i for i in teamsDic.keys()]
   
         #获取团队成员
+        global project
         project = list_firstOrDefault(lambda x :x["name"]=='RMIS',teams)
         # users = getTeamUser(project["id"])
 
@@ -86,35 +191,36 @@ class MyFrame(wx.Frame):
 
         # frame = GridFrame(right) 
         # Create a wxGrid object
+        global grid
         grid = wx.grid.Grid(right, -1)
  
         # Then we call CreateGrid to set the dimensions of the grid
         # (100 rows and 10 columns in this example)
-        grid.CreateGrid(200, 10)
+        grid.CreateGrid(200, 30)
  
         # We can set the sizes of individual rows and columns
         # in pixels
-        grid.SetRowSize(0, 60)
-        grid.SetColSize(0, 120)
+        # grid.SetRowSize(0, 60)
+        # grid.SetColSize(0, 120)
  
         # And set grid cell contents as strings
-        grid.SetCellValue(0, 0, 'wxGrid is good') 
+        # grid.SetCellValue(0, 0, 'wxGrid is good') 
 
         # We can specify that some cells are read.only
-        grid.SetCellValue(0, 3, 'This is read.only')
-        grid.SetReadOnly(0, 3)
+        # grid.SetCellValue(0, 3, 'This is read.only')
+        # grid.SetReadOnly(0, 3)
  
         # Colours can be specified for grid cell contents
-        grid.SetCellValue(3, 3, 'green on grey')
-        grid.SetCellTextColour(3, 3, wx.GREEN)
-        grid.SetCellBackgroundColour(3, 3, wx.LIGHT_GREY)
+        # grid.SetCellValue(3, 3, 'green on grey')
+        # grid.SetCellTextColour(3, 3, wx.GREEN)
+        # grid.SetCellBackgroundColour(3, 3, wx.LIGHT_GREY)
  
         # We can specify the some cells will store numeric
         # values rather than strings. Here we set grid column 5
         # to hold floating point values displayed with width of 6
         # and precision of 2
-        grid.SetColFormatFloat(5, 6, 2)
-        grid.SetCellValue(0, 6, '3.1415')
+        # grid.SetColFormatFloat(5, 6, 2)
+        # grid.SetCellValue(0, 6, '3.1415')
 
         # 标题
         lbl = wx.StaticText(right,-1,style = wx.ALIGN_CENTER) 
@@ -149,8 +255,8 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch1)
 
         cygl = wx.StaticText(right,-1, style = wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_MIDDLE,label='成员过滤:')
-        list2=["陈金伟","韩小江","姜智林","杨博","邓东林"]
-        ch2=wx.ComboBox(right,-1,value='姜智林',choices=list2,style=wx.CB_SORT)
+        list2=["全部","陈金伟","韩小江","姜智林","杨博","邓东林"]
+        ch2=wx.ComboBox(right,-1,value='全部',choices=list2,style=wx.CB_SORT)
         #添加事件处理
         self.Bind(wx.EVT_COMBOBOX,self.on_combobox,ch2)
 
@@ -188,14 +294,40 @@ class MyFrame(wx.Frame):
         print("选择{0}".format(event.GetString()))
     
     def on_click(self, event):
-        item = event.GetItem()
-        self.st.SetLabel(self.tree.GetItemText(item))
+        item = event.GetItem()  
+        selId = self.tree.GetItemData(item)   
+        fItem = team_search_Dict[selId]
+ 
+        if fItem == '':
+            return False
+
+        if (('isFolder' in fItem.Origin) and (fItem.Origin['isFolder'] == True)):
+            return False
+
+        # 获取查询项ID
+        item_id = fItem.NodeId 
+
+        # 获取数据
+        tasks = getTaskDetails(project['id'],item_id)
+        self.data = GridData(tasks)
+        # self.grid = wx.grid.Grid(self)
+        # grid.ClearGrid()
+        # global _init
+
+        # if _init == True: 
+        #     _init = False
+        #     grid.SetTable(self.data)
+
+
+        # grid.AutoSize()
+        # self.data.set_value(1, 0, "x")
+        grid.Refresh()
  
     def CreateTreeCtrl(self, parent,project_Id):
-        tree = wx.TreeCtrl(parent)
+        tree = wx.TreeCtrl(parent,style=wx.TR_HAS_BUTTONS|wx.TR_LINES_AT_ROOT|wx.TR_TWIST_BUTTONS)
 
         # 获取查询列表
-        getTfsSearchItem(project_Id);
+        getTfsSearchItem(project_Id)
 
         # 通过wx.ImageList()创建一个图像列表imglist并保存在树中
         imglist = wx.ImageList(16, 16, True, 2)
@@ -207,7 +339,7 @@ class MyFrame(wx.Frame):
         root = tree.AddRoot('RMIS团队查询', image=0)
  
         for i,item in enumerate(team_search_Tree.Childs):
-            treeNode = tree.AppendItem(root,item.NodeName, 0)
+            treeNode = tree.AppendItem(root,item.NodeName, 0,data=item.NodeId)
             if  len(item.Origin['children']) >0:
                 loadChild(tree,treeNode,item) 
                 tree.Expand(treeNode) 
@@ -222,11 +354,11 @@ class MyFrame(wx.Frame):
 def loadChild(tree,treeNode,parentItem):
      for i,item in enumerate(parentItem.Childs):
             if  len(item.Childs) > 0:
-                node = tree.AppendItem(treeNode, item.NodeName, 0)
+                node = tree.AppendItem(treeNode, item.NodeName, 0,data = item.NodeId) 
                 loadChild(tree,node,item)
                 # tree.Expand(node)
             else:
-                node = tree.AppendItem(treeNode, item.NodeName, 1)
+                node = tree.AppendItem(treeNode, item.NodeName,1,data = item.NodeId)
 
 class App(wx.App):
     def OnInit(self):
@@ -238,7 +370,6 @@ class App(wx.App):
     def OnExit(self):
         print("应用程序退出")
         return 0
-
 
 def showMain():
     app = App()

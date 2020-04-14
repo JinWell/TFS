@@ -88,6 +88,18 @@ def loadChildNode(parent,project_Id):
         #     team_search_Dict[node.NodeId] = node 
         #     parent.Childs.append(node)
 
+# 获取详情
+def getTaskDetails(project_Id,sid):  
+    referer = get_url('tfs/DefaultCollection/RMIS/_queries?id={0}&_a=query').format(sid) 
+    headers = {
+        "Referer":referer
+    } 
+    session.headers.update(headers)
+    wiq = team_search_Dict[sid]
+    payload = {'wiql':wiq.Origin["wiql"]} 
+    search_result = session.post(get_url('tfs/DefaultCollection/{0}/_api/_wit/query?__v=5').format(project_Id),json = payload)
+    search_details = search_result.json()
+    return search_details
 
 def getTeamUser(projectId):  
     payload = {
